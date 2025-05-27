@@ -28,7 +28,8 @@ module.exports = {
       }
 
       if (commands.length === 0) {
-        return await sendText(senderId, pageAccessToken, "⚠️ No commands found.");
+        await sendText(senderId, pageAccessToken, "⚠️ No commands found.");
+        return true; // Explicitly return success
       }
 
       // Build help message
@@ -43,22 +44,26 @@ module.exports = {
         messageText = messageText.slice(0, MAX_LENGTH - 3) + "...";
       }
 
-      return await sendText(senderId, pageAccessToken, messageText);
+      await sendText(senderId, pageAccessToken, messageText);
+      return true; // Explicitly return success
 
     } catch (err) {
       console.error("Help command error:", err.message);
-      return await sendText(senderId, pageAccessToken, "❌ Something went wrong while loading commands.");
+      await sendText(senderId, pageAccessToken, "❌ Something went wrong while loading commands.");
+      return false; // Explicitly return failure
     }
   }
 };
 
 async function sendText(senderId, token, text) {
   try {
-    await axios.post(`https://graph.facebook.com/v17.0/me/messages?access_token=${token}`, {
+    const response = await axios.post(`https://graph.facebook.com/v17.0/me/messages?access_token=${token}`, {
       recipient: { id: senderId },
       message: { text }
     });
+    return response.data; // Return the response data
   } catch (error) {
     console.error("❌ Failed to send help message:", error.message);
+    throw error; // Re-throw the error to be caught by the execute function
   }
 }
